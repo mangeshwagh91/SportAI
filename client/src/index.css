@@ -1,0 +1,99 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Space+Grotesk:wght@400;500;600;700&display=swap');
+
+@layer base {
+  :root {
+    --background: 220 20% 6%;
+    --foreground: 0 0% 95%;
+
+    --card: 220 18% 10%;
+    --card-foreground: 0 0% 95%;
+
+    --popover: 220 18% 10%;
+    --popover-foreground: 0 0% 95%;
+
+    --primary: 82 77% 55%;
+    --primary-foreground: 220 20% 6%;
+
+    --secondary: 220 16% 16%;
+    --secondary-foreground: 0 0% 85%;
+
+    --muted: 220 14% 14%;
+    --muted-foreground: 220 10% 55%;
+
+    --accent: 82 77% 55%;
+    --accent-foreground: 220 20% 6%;
+
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 0 0% 98%;
+
+    --border: 220 14% 18%;
+    --input: 220 14% 18%;
+    --ring: 82 77% 55%;
+
+    --radius: 0.75rem;
+
+    --sidebar-background: 220 18% 8%;
+    --sidebar-foreground: 0 0% 90%;
+    --sidebar-primary: 82 77% 55%;
+    --sidebar-primary-foreground: 220 20% 6%;
+    --sidebar-accent: 220 14% 14%;
+    --sidebar-accent-foreground: 0 0% 90%;
+    --sidebar-border: 220 14% 18%;
+    --sidebar-ring: 82 77% 55%;
+
+    --glass: 220 18% 10% / 0.6;
+    --glass-border: 220 14% 22%;
+    --glow-primary: 82 77% 55% / 0.15;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground font-sans antialiased;
+    font-family: 'Inter', sans-serif;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'Space Grotesk', sans-serif;
+  }
+}
+
+@layer utilities {
+  .glass-card {
+    @apply bg-card/60 backdrop-blur-xl border border-border/50 rounded-xl;
+  }
+
+  .glow-border {
+    box-shadow: 0 0 20px hsl(var(--glow-primary)), inset 0 0 20px hsl(var(--glow-primary));
+  }
+
+  .text-gradient {
+    @apply bg-clip-text text-transparent bg-gradient-to-r from-primary to-[hsl(120,60%,60%)];
+  }
+
+  .animate-float {
+    animation: float 6s ease-in-out infinite;
+  }
+
+  .animate-pulse-glow {
+    animation: pulse-glow 2s ease-in-out infinite;
+  }
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-10px); }
+}
+
+@keyframes pulse-glow {
+  0%, 100% { box-shadow: 0 0 5px hsl(var(--glow-primary)); }
+  50% { box-shadow: 0 0 25px hsl(var(--glow-primary)), 0 0 50px hsl(var(--glow-primary)); }
+}

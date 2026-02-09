@@ -1,0 +1,64 @@
+#root {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 2rem;
+  text-align: center;
+}
+
+.logo {
+  height: 6em;
+  padding: 1.5em;
+  will-change: filter;
+  transition: filter 300ms;
+}
+.logo:hover {
+  filter: drop-shadow(0 0 2em #646cffaa);
+}
+.logo.react:hover {
+  filter: drop-shadow(0 0 2em #61dafbaa);
+}
+
+@keyframes logo-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  a:nth-of-type(2) .logo {
+    animation: logo-spin infinite 20s linear;
+  }
+}
+
+.card {
+  padding: 2em;
+}
+
+.read-the-docs {
+  color: #888;
+}
+
+/* Custom Scrollbar Styles */
+::-webkit-scrollbar {
+  width: 10px;
+  background: #18181b;
+}
+::-webkit-scrollbar-thumb {
+  background: #6366f1;
+  border-radius: 8px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #818cf8;
+}
+::-webkit-scrollbar-track {
+  background: #18181b;
+}
+
+/* Firefox */
+html {
+  scrollbar-color: #6366f1 #18181b;
+  scrollbar-width: thin;
+}
