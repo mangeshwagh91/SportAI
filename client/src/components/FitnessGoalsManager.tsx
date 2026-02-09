@@ -21,6 +21,7 @@ import {
   Clock
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import { API_URL } from '../config/api';
 
 interface FitnessGoal {
   _id: string;
@@ -64,7 +65,7 @@ export const FitnessGoalsManager = () => {
 
   const fetchGoals = async () => {
     try {
-      const response = await fetch('http://localhost:5000/api/goals', {
+      const response = await fetch(`${API_URL}/goals`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -91,7 +92,7 @@ export const FitnessGoalsManager = () => {
         targetDate: formData.targetDate || undefined
       };
 
-      const url = editingGoal ? `http://localhost:5000/api/goals/${editingGoal._id}` : 'http://localhost:5000/api/goals';
+      const url = editingGoal ? `${API_URL}/goals/${editingGoal._id}` : `${API_URL}/goals`;
       const method = editingGoal ? 'PUT' : 'POST';
 
       const response = await fetch(url, {

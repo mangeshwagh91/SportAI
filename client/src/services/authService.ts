@@ -1,4 +1,4 @@
-const API_URL = 'http://localhost:5000/api';
+import { API_URL, getAuthHeaders } from '../config/api';
 
 interface AuthResponse {
   success: boolean;
@@ -8,13 +8,7 @@ interface AuthResponse {
 }
 
 class AuthService {
-  private getAuthHeaders() {
-    const token = localStorage.getItem('token');
-    return {
-      'Content-Type': 'application/json',
-      ...(token && { Authorization: `Bearer ${token}` })
-    };
-  }
+  private getAuthHeaders = getAuthHeaders;
 
   async login(email: string, password: string): Promise<AuthResponse> {
     const response = await fetch(`${API_URL}/auth/login`, {

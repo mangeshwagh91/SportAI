@@ -24,6 +24,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
+import { API_URL } from '../config/api';
 
 const Settings = () => {
   const [settings, setSettings] = useState({
@@ -87,7 +88,7 @@ const Settings = () => {
 
     try {
       // Implementation for saving settings to your API
-      const response = await fetch('http://localhost:5000/api/auth/settings', {
+      const response = await fetch(`${API_URL}/auth/settings`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -128,7 +129,7 @@ const Settings = () => {
     setError(null);
 
     try {
-      const response = await fetch('http://localhost:5000/api/auth/change-password', {
+      const response = await fetch(`${API_URL}/auth/change-password`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -166,7 +167,7 @@ const Settings = () => {
     setError(null);
 
     try {
-      const response = await fetch('http://localhost:5000/api/auth/delete-account', {
+      const response = await fetch(`${API_URL}/auth/delete-account`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${token}`

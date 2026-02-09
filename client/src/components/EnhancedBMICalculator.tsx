@@ -9,6 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { Calculator, TrendingUp, Activity, AlertTriangle } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import { API_URL } from '../config/api';
 
 interface BMIRecord {
   _id: string;
@@ -63,7 +64,7 @@ export const EnhancedBMICalculator = () => {
 
   const fetchBMIHistory = async () => {
     try {
-      const response = await fetch('http://localhost:5000/api/bmi/history', {
+      const response = await fetch(`${API_URL}/bmi/history`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -80,7 +81,7 @@ export const EnhancedBMICalculator = () => {
 
   const fetchBMIAnalytics = async () => {
     try {
-      const response = await fetch('http://localhost:5000/api/bmi/analytics', {
+      const response = await fetch(`${API_URL}/bmi/analytics`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -103,7 +104,7 @@ export const EnhancedBMICalculator = () => {
     setIsLoading(true);
 
     try {
-      const response = await fetch('http://localhost:5000/api/bmi/calculate', {
+      const response = await fetch(`${API_URL}/bmi/calculate`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

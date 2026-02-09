@@ -18,6 +18,7 @@ import {
   RefreshCw
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import { API_URL } from '../config/api';
 
 interface SportRecommendation {
   name: string;
@@ -90,7 +91,7 @@ export const AIRecommendationsEnhanced = () => {
   const fetchSportRecommendations = async () => {
     try {
       setIsLoading(true);
-      const response = await fetch('http://localhost:5000/api/ai/sports-recommendations', {
+      const response = await fetch(`${API_URL}/ai/sports-recommendations`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -115,7 +116,7 @@ export const AIRecommendationsEnhanced = () => {
       setIsLoading(true);
       setError(null);
       
-      const response = await fetch('http://localhost:5000/api/ai/workout-plan', {
+      const response = await fetch(`${API_URL}/ai/workout-plan`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -150,7 +151,7 @@ export const AIRecommendationsEnhanced = () => {
       setIsLoading(true);
       setError(null);
       
-      const response = await fetch('http://localhost:5000/api/ai/diet-plan', {
+      const response = await fetch(`${API_URL}/ai/diet-plan`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -181,7 +182,7 @@ export const AIRecommendationsEnhanced = () => {
 
   const fetchWorkoutPlans = async () => {
     try {
-      const response = await fetch('http://localhost:5000/api/ai/workout-plans', {
+      const response = await fetch(`${API_URL}/ai/workout-plans`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -198,7 +199,7 @@ export const AIRecommendationsEnhanced = () => {
 
   const fetchDietPlans = async () => {
     try {
-      const response = await fetch('http://localhost:5000/api/ai/diet-plans', {
+      const response = await fetch(`${API_URL}/ai/diet-plans`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }

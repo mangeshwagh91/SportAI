@@ -33,15 +33,18 @@ const authLimiter = rateLimit({
 });
 
 // CORS
+const allowedOrigins = [
+  'http://localhost:3000',
+  'http://localhost:5173', 
+  'http://localhost:8080',
+  'http://localhost:8081',
+  'http://localhost:4173',
+  // Add production URLs from CLIENT_URL environment variable
+  ...(process.env.CLIENT_URL ? process.env.CLIENT_URL.split(',').map(url => url.trim()) : [])
+].filter(Boolean);
+
 app.use(cors({
-  origin: [
-    'http://localhost:3000',
-    'http://localhost:5173', 
-    'http://localhost:8080',
-    'http://localhost:8081',
-    'http://localhost:4173',
-    process.env.CLIENT_URL
-  ].filter(Boolean),
+  origin: allowedOrigins,
   credentials: true
 }));
 

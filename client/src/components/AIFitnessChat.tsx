@@ -17,6 +17,7 @@ import {
   Brain
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import { API_URL } from '../config/api';
 
 interface ChatMessage {
   role: 'user' | 'assistant';
@@ -70,7 +71,7 @@ export const AIFitnessChat = () => {
 
   const fetchChatSessions = async () => {
     try {
-      const response = await fetch('http://localhost:5000/api/chat/sessions', {
+      const response = await fetch(`${API_URL}/chat/sessions`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -90,7 +91,7 @@ export const AIFitnessChat = () => {
       setIsLoading(true);
       setError(null);
       
-      const response = await fetch('http://localhost:5000/api/chat/start', {
+      const response = await fetch(`${API_URL}/chat/start`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -118,7 +119,7 @@ export const AIFitnessChat = () => {
     try {
       setIsLoading(true);
       
-      const response = await fetch(`http://localhost:5000/api/chat/${sessionId}`, {
+      const response = await fetch(`${API_URL}/chat/${sessionId}`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -157,7 +158,7 @@ export const AIFitnessChat = () => {
     setIsLoading(true);
 
     try {
-      const response = await fetch(`http://localhost:5000/api/chat/${currentSessionId}/message`, {
+      const response = await fetch(`${API_URL}/chat/${currentSessionId}/message`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -187,7 +188,7 @@ export const AIFitnessChat = () => {
 
   const deleteSession = async (sessionId: string) => {
     try {
-      const response = await fetch(`http://localhost:5000/api/chat/${sessionId}`, {
+      const response = await fetch(`${API_URL}/chat/${sessionId}`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${token}`

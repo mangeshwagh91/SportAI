@@ -11,6 +11,7 @@ import { Separator } from '@/components/ui/separator';
 import { User, Mail, Calendar, Ruler, Weight, Target, Save, ArrowLeft, Activity } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
+import { API_URL } from '../config/api';
 
 interface UserProfile {
   name: string;
@@ -75,7 +76,7 @@ const Profile = () => {
     setError(null);
 
     try {
-      const response = await fetch('http://localhost:5000/api/auth/profile', {
+      const response = await fetch(`${API_URL}/auth/profile`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
