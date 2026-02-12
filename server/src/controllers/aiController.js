@@ -86,7 +86,9 @@ const generateWorkoutPlan = async (req, res) => {
       gender: user.profile?.gender || 'male'
     };
 
+    console.log('Generating workout plan for user:', userId);
     const aiPlan = await aiService.generateWorkoutPlan(userProfile, preferences);
+    console.log('Workout plan generated successfully');
 
     // Save the generated plan to database
     const workoutPlan = new WorkoutPlan({
@@ -111,9 +113,11 @@ const generateWorkoutPlan = async (req, res) => {
 
   } catch (error) {
     console.error('Generate workout plan error:', error);
+    console.error('Error stack:', error.stack);
     res.status(500).json({
       success: false,
-      message: 'Server error while generating workout plan'
+      message: 'Server error while generating workout plan',
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined
     });
   }
 };
@@ -149,23 +153,73 @@ const generateDietPlan = async (req, res) => {
       gender: user.profile?.gender || 'male'
     };
 
+    console.log('Generating diet plan for user:', userId);
     const aiPlan = await aiService.generateDietPlan(userProfile, preferences);
+    console.log('Diet plan generated successfully:', JSON.stringify(aiPlan));
+
+    // Transform meals from object to array format expected by schema
+    const mealsArray = [];
+    if (aiPlan.meals) {
+      if (aiPlan.meals.breakfast) {
+        mealsArray.push({
+          type: 'breakfast',
+          name: 'Breakfast',
+          description: aiPlan.meals.breakfast,
+          calories: Math.round((aiPlan.dailyCalories || 2000) * 0.25)
+        });
+      }
+      if (aiPlan.meals.lunch) {
+        mealsArray.push({
+          type: 'lunch',
+          name: 'Lunch',
+          description: aiPlan.meals.lunch,
+          calories: Math.round((aiPlan.dailyCalories || 2000) * 0.35)
+        });
+      }
+      if (aiPlan.meals.dinner) {
+        mealsArray.push({
+          type: 'dinner',
+          name: 'Dinner',
+          description: aiPlan.meals.dinner,
+          calories: Math.round((aiPlan.dailyCalories || 2000) * 0.30)
+        });
+      }
+      if (aiPlan.meals.snacks) {
+        mealsArray.push({
+          type: 'snack_1',
+          name: 'Snacks',
+          description: aiPlan.meals.snacks,
+          calories: Math.round((aiPlan.dailyCalories || 2000) * 0.10)
+        });
+      }
+    }
+
+    console.log('Meals array:', JSON.stringify(mealsArray));
+    console.log('Creating diet plan document...');
 
     // Save the generated plan to database
     const dietPlan = new DietPlan({
       userId,
-      title: aiPlan.title,
-      description: aiPlan.description,
+      title: aiPlan.title || 'Personalized Diet Plan',
+      description: aiPlan.description || 'AI-generated personalized diet plan',
       goalType: activeGoals[0]?.goalType || 'maintenance',
-      dailyCalories: aiPlan.dailyCalories,
-      macros: aiPlan.macros,
-      meals: aiPlan.meals || [],
+      dailyCalories: aiPlan.dailyCalories || 2000,
+      macros: aiPlan.macros || { protein: 30, carbs: 40, fats: 30 },
+      meals: mealsArray,
       weeklyMenu: aiPlan.weeklyMenu || [],
       dietaryRestrictions: preferences.dietaryRestrictions || [],
       aiGenerated: true
     });
 
-    await dietPlan.save();
+    console.log('Saving diet plan to database...');
+    try {
+      await dietPlan.save();
+      console.log('Diet plan saved successfully');
+    } catch (saveError) {
+      console.error('Database save error:', saveError);
+      console.error('Validation errors:', saveError.errors);
+      throw new Error(`Database save failed: ${saveError.message}`);
+    }
 
     res.status(201).json({
       success: true,
@@ -175,9 +229,11 @@ const generateDietPlan = async (req, res) => {
 
   } catch (error) {
     console.error('Generate diet plan error:', error);
+    console.error('Error stack:', error.stack);
     res.status(500).json({
       success: false,
-      message: 'Server error while generating diet plan'
+      message: error.message || 'Server error while generating diet plan',
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined
     });
   }
 };

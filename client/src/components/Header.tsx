@@ -18,11 +18,26 @@ const Header = ({ activeSection, onNavigate }: HeaderProps) => {
   return (
     <header className="fixed top-0 left-0 right-0 z-50 glass-card border-b border-border/30">
       <div className="container mx-auto px-4 h-16 flex items-center justify-between">
-        <button onClick={() => onNavigate("home")} className="flex items-center gap-2 group">
-          <div className="w-9 h-9 rounded-lg bg-primary flex items-center justify-center">
-            <Activity className="w-5 h-5 text-primary-foreground" />
+        <button onClick={() => onNavigate("home")} className="flex items-center gap-3 group">
+          <div className="w-12 h-12 rounded-lg overflow-hidden border-2 border-red-200 bg-white flex items-center justify-center flex-shrink-0 shadow-sm">
+            <img 
+              src="/NCC_logo_full_HD-removebg-preview.png" 
+              alt="NCC Logo" 
+              className="w-full h-full object-cover"
+              onError={(e) => {
+                // Fallback if image not found
+                const target = e.target as HTMLImageElement;
+                target.style.display = 'none';
+                if (target.parentElement) {
+                  target.parentElement.innerHTML = '<div class="text-primary font-bold text-xs">NCC</div>';
+                }
+              }}
+            />
           </div>
-          <span className="font-display font-bold text-lg text-foreground">FitAI</span>
+          <div className="flex flex-col items-start">
+            <span className="font-display font-bold text-sm md:text-base text-foreground leading-tight">OTA Kamptee</span>
+            <span className="font-display font-semibold text-xs text-primary leading-tight">Rana Pratap Company</span>
+          </div>
         </button>
 
         <div className="flex items-center gap-6">

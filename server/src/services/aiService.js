@@ -26,19 +26,29 @@ Please provide:
 3. Beginner tips
 4. Expected benefits
 
-Format as JSON array with objects containing: name, reason, tips, benefits`;
+Format as JSON array with objects containing: name (string), reason (string), tips (string), benefits (string)
+
+IMPORTANT: Return ONLY valid JSON array, no additional text or markdown.`;
 
     try {
       const response = await this.groq.chat.completions.create({
         model: "llama-3.3-70b-versatile",
-        messages: [{ role: "user", content: prompt }],
+        messages: [
+          { role: "system", content: "You are a sports fitness expert. Always respond with valid JSON only, no markdown or extra text." },
+          { role: "user", content: prompt }
+        ],
         max_tokens: 1000,
         temperature: 0.7
       });
 
-      return JSON.parse(response.choices[0].message.content);
+      let content = response.choices[0].message.content.trim();
+      
+      // Remove markdown code blocks if present
+      content = content.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
+      
+      return JSON.parse(content);
     } catch (error) {
-      console.error('AI Sport Recommendations Error:', error);
+      console.error('AI Sport Recommendations Error:', error.message);
       return this.getFallbackSportRecommendations(userProfile);
     }
   }
@@ -65,31 +75,55 @@ Provide a detailed workout plan with:
 3. Progress tips
 4. Safety considerations for BMI category
 
-Format as JSON with: title, description, weeklyPlan (array of days with exercises)`;
+Format as JSON with: title (string), description (string), weeklyPlan (array of objects with day and exercises array)
+
+IMPORTANT: Return ONLY valid JSON, no additional text or markdown.`;
 
     try {
       const response = await this.groq.chat.completions.create({
         model: "llama-3.3-70b-versatile",
-        messages: [{ role: "user", content: prompt }],
+        messages: [
+          { role: "system", content: "You are a fitness expert. Always respond with valid JSON only, no markdown or extra text." },
+          { role: "user", content: prompt }
+        ],
         max_tokens: 1500,
         temperature: 0.7
       });
 
-      return JSON.parse(response.choices[0].message.content);
+      let content = response.choices[0].message.content.trim();
+      
+      // Remove markdown code blocks if present
+      content = content.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
+      
+      const parsed = JSON.parse(content);
+      
+      return {
+        title: parsed.title || "Personalized Workout Plan",
+        description: parsed.description || "A customized fitness routine",
+        weeklyPlan: parsed.weeklyPlan || []
+      };
     } catch (error) {
-      console.error('AI Workout Plan Error:', error);
+      console.error('AI Workout Plan Error:', error.message);
       return this.getFallbackWorkoutPlan(userProfile);
     }
   }
 
   // Generate personalized diet plan
   async generateDietPlan(userProfile, preferences = {}) {
-    const { bmi, age, fitnessLevel, goals, bmiCategory, weight, height } = userProfile;
+    const { bmi, age, fitnessLevel, goals, bmiCategory, weight, height, gender } = userProfile;
     const { dietaryRestrictions = [], mealCount = 3 } = preferences;
 
-    // Calculate BMR and daily calories
-    const bmr = this.calculateBMR(weight, height, age, userProfile.gender || 'male');
+    console.log('User profile for diet plan:', { weight, height, age, gender, bmi });
+
+    // Calculate BMR and daily calories with validation
+    if (!weight || !height || !age) {
+      console.warn('Missing weight/height/age, using defaults');
+    }
+    
+    const bmr = this.calculateBMR(weight || 70, height || 170, age || 25, gender || 'male');
     const dailyCalories = this.calculateDailyCalories(bmr, fitnessLevel, goals);
+    
+    console.log('Calculated BMR:', bmr, 'Daily Calories:', dailyCalories);
 
     const prompt = `Create a personalized diet plan for:
 
@@ -103,24 +137,70 @@ User Profile:
 
 Provide:
 1. Daily meal plan with calories
-2. Macro breakdown (protein/carbs/fats)
+2. Macro breakdown as PERCENTAGES (protein/carbs/fats must add up to 100)
 3. Shopping list
 4. Meal prep tips
 
-Format as JSON with: title, dailyCalories, macros, meals (breakfast, lunch, dinner, snacks), shoppingList`;
+Format as JSON with: 
+- title (string)
+- dailyCalories (number) 
+- macros (object with protein, carbs, fats as PERCENTAGE numbers that add up to 100, e.g., {protein: 30, carbs: 40, fats: 30})
+- meals (object with breakfast, lunch, dinner, snacks as strings)
+- shoppingList (array of strings)
+
+IMPORTANT: Return ONLY valid JSON, no additional text or markdown. Macros must be percentages.`;
 
     try {
       const response = await this.groq.chat.completions.create({
         model: "llama-3.3-70b-versatile",
-        messages: [{ role: "user", content: prompt }],
+        messages: [
+          { role: "system", content: "You are a nutrition expert. Always respond with valid JSON only, no markdown or extra text. Macros should always be percentages that add up to 100." },
+          { role: "user", content: prompt }
+        ],
         max_tokens: 1500,
         temperature: 0.7
       });
 
-      return JSON.parse(response.choices[0].message.content);
+      let content = response.choices[0].message.content.trim();
+      
+      // Remove markdown code blocks if present
+      content = content.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
+      
+      const parsed = JSON.parse(content);
+      
+      // Validate and normalize macros to ensure they're percentages
+      let macros = parsed.macros || { protein: 30, carbs: 40, fats: 30 };
+      
+      // Check if macros are in valid percentage range
+      const total = (macros.protein || 0) + (macros.carbs || 0) + (macros.fats || 0);
+      
+      // If total is way off (like 170+ suggesting grams), normalize to percentages
+      if (total < 80 || total > 120) {
+        console.warn('Invalid macro percentages detected, normalizing:', macros);
+        const sum = macros.protein + macros.carbs + macros.fats;
+        if (sum > 0) {
+          macros = {
+            protein: Math.round((macros.protein / sum) * 100),
+            carbs: Math.round((macros.carbs / sum) * 100),
+            fats: Math.round((macros.fats / sum) * 100)
+          };
+        } else {
+          // Use defaults
+          macros = { protein: 30, carbs: 40, fats: 30 };
+        }
+      }
+      
+      // Ensure the parsed data has the required structure
+      return {
+        title: parsed.title || "Personalized Diet Plan",
+        dailyCalories: parsed.dailyCalories || dailyCalories,
+        macros: macros,
+        meals: parsed.meals || {},
+        shoppingList: parsed.shoppingList || []
+      };
     } catch (error) {
-      console.error('AI Diet Plan Error:', error);
-      return this.getFallbackDietPlan(userProfile);
+      console.error('AI Diet Plan Error:', error.message);
+      return this.getFallbackDietPlan(userProfile, dailyCalories);
     }
   }
 
@@ -206,28 +286,58 @@ Provide personalized, safe, and encouraging fitness advice. Always consider the 
   }
 
   getFallbackWorkoutPlan(userProfile) {
+    const { bmiCategory, fitnessLevel } = userProfile;
+    
     return {
-      title: "Beginner Fitness Plan",
-      description: "A balanced workout plan suitable for beginners",
-      weeklyPlan: [
-        { day: "Monday", exercises: ["Push-ups: 3 sets of 10", "Squats: 3 sets of 15", "Plank: 3 sets of 30s"] },
-        { day: "Wednesday", exercises: ["Walking: 30 minutes", "Stretching: 15 minutes"] },
-        { day: "Friday", exercises: ["Lunges: 3 sets of 12", "Wall sits: 3 sets of 30s", "Basic yoga: 20 minutes"] }
+      title: `${fitnessLevel.charAt(0).toUpperCase() + fitnessLevel.slice(1)} Fitness Plan`,
+      description: `A personalized workout plan for ${bmiCategory} individuals`,
+      exercises: [
+        { name: "Push-ups", description: "Standard push-ups", sets: 3, reps: "8-12", restTime: 60, muscleGroups: ["chest", "arms"] },
+        { name: "Squats", description: "Bodyweight squats", sets: 3, reps: "12-15", restTime: 60, muscleGroups: ["legs"] },
+        { name: "Plank", description: "Forearm plank hold", sets: 3, reps: "30-45 seconds", restTime: 45, muscleGroups: ["core"] },
+        { name: "Walking", description: "Brisk walking", sets: 1, reps: "30 minutes", restTime: 0, muscleGroups: ["cardio"] },
+        { name: "Lunges", description: "Alternating lunges", sets: 3, reps: "10-12 each leg", restTime: 60, muscleGroups: ["legs"] }
+      ],
+      weeklySchedule: [
+        { day: "monday", exerciseIndexes: [0, 1, 2] },
+        { day: "wednesday", exerciseIndexes: [3] },
+        { day: "friday", exerciseIndexes: [4, 1, 2] }
       ]
     };
   }
 
-  getFallbackDietPlan(userProfile) {
+  getFallbackDietPlan(userProfile, dailyCalories = 2000) {
+    const { bmiCategory, goals } = userProfile;
+    
+    let title = "Balanced Nutrition Plan";
+    let meals = {
+      breakfast: "Oatmeal with berries and nuts (400 cal)",
+      lunch: "Grilled chicken salad with mixed vegetables and olive oil dressing (500 cal)",
+      dinner: "Baked fish with quinoa and steamed broccoli (600 cal)",
+      snacks: "Greek yogurt with fruits, handful of almonds (300 cal)"
+    };
+
+    // Adjust for BMI category
+    if (bmiCategory === 'Underweight') {
+      title = "Weight Gain Nutrition Plan";
+      dailyCalories += 500;
+      meals.snacks = "Protein shake, peanut butter toast, trail mix (500 cal)";
+    } else if (bmiCategory === 'Overweight' || bmiCategory === 'Obese') {
+      title = "Weight Loss Nutrition Plan";
+      dailyCalories -= 300;
+      meals.dinner = "Grilled chicken breast with large vegetable salad (400 cal)";
+    }
+
     return {
-      title: "Balanced Nutrition Plan",
-      dailyCalories: 2000,
-      macros: { protein: 25, carbs: 45, fats: 30 },
-      meals: {
-        breakfast: "Oatmeal with berries and nuts",
-        lunch: "Grilled chicken salad with vegetables",
-        dinner: "Baked fish with quinoa and steamed broccoli"
-      },
-      shoppingList: ["Oats", "Berries", "Nuts", "Chicken", "Fish", "Quinoa", "Vegetables"]
+      title,
+      dailyCalories,
+      macros: { protein: 30, carbs: 40, fats: 30 },
+      meals,
+      shoppingList: [
+        "Oats", "Berries", "Nuts", "Chicken breast", "Fish", 
+        "Quinoa", "Vegetables (broccoli, spinach, carrots)", 
+        "Greek yogurt", "Olive oil", "Eggs", "Brown rice"
+      ]
     };
   }
 }

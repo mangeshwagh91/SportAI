@@ -17,10 +17,6 @@ const HeroSection = ({ onNavigate }: HeroProps) => {
       <div className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] rounded-full bg-primary/5 blur-[120px] pointer-events-none" />
 
       <div className="container mx-auto px-4 text-center relative z-10">
-        <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 border border-primary/20 text-primary text-sm font-medium mb-8">
-          <Activity className="w-4 h-4" /> AI-Powered Fitness Platform
-        </div>
-
         <h1 className="font-display text-5xl md:text-7xl font-bold leading-tight mb-6 max-w-3xl mx-auto">
           Your Smart
           <br />
@@ -28,7 +24,7 @@ const HeroSection = ({ onNavigate }: HeroProps) => {
         </h1>
 
         <p className="text-lg md:text-xl text-muted-foreground max-w-xl mx-auto mb-10">
-          Calculate BMI, get AI sport recommendations, personalized diet & workout plans — all in one place.
+          NCC Sports AI Platform - Calculate BMI, get AI sport recommendations, personalized diet & workout plans — all in one place.
         </p>
 
         <div className="flex flex-col sm:flex-row gap-4 justify-center mb-16">

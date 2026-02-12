@@ -20,6 +20,28 @@ import {
 import { useAuth } from '../context/AuthContext';
 import { API_URL } from '../config/api';
 
+// Helper function to handle API responses
+const handleApiResponse = async (response: Response) => {
+  const contentType = response.headers.get('content-type');
+  
+  if (contentType && contentType.includes('application/json')) {
+    return await response.json();
+  }
+  
+  // Handle non-JSON responses (like rate limit HTML pages)
+  const text = await response.text();
+  
+  if (response.status === 429) {
+    throw new Error('Too many requests. Please wait a moment and try again.');
+  }
+  
+  if (response.status === 500) {
+    throw new Error('Server error. Please try again later.');
+  }
+  
+  throw new Error(text || 'An error occurred');
+};
+
 interface SportRecommendation {
   name: string;
   reason: string;
@@ -131,16 +153,17 @@ export const AIRecommendationsEnhanced = () => {
         })
       });
 
-      const data = await response.json();
+      const data = await handleApiResponse(response);
       
       if (data.success) {
         await fetchWorkoutPlans();
         setActiveTab('workouts');
       } else {
-        setError(data.message);
+        setError(data.message || 'Failed to generate workout plan');
       }
-    } catch (error) {
-      setError('Failed to generate workout plan');
+    } catch (error: any) {
+      setError(error.message || 'Failed to generate workout plan');
+      console.error('Workout plan error:', error);
     } finally {
       setIsLoading(false);
     }
@@ -165,16 +188,17 @@ export const AIRecommendationsEnhanced = () => {
         })
       });
 
-      const data = await response.json();
+      const data = await handleApiResponse(response);
       
       if (data.success) {
         await fetchDietPlans();
         setActiveTab('diet');
       } else {
-        setError(data.message);
+        setError(data.message || 'Failed to generate diet plan');
       }
-    } catch (error) {
-      setError('Failed to generate diet plan');
+    } catch (error: any) {
+      setError(error.message || 'Failed to generate diet plan');
+      console.error('Diet plan error:', error);
     } finally {
       setIsLoading(false);
     }

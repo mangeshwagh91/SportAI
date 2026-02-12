@@ -22,14 +22,16 @@ app.use(helmet());
 // Rate limiting
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100 // limit each IP to 100 requests per windowMs
+  max: process.env.NODE_ENV === 'production' ? 100 : 500, // relaxed for development
+  message: { success: false, message: 'Too many requests, please try again later.' }
 });
 app.use(limiter);
 
 // Auth rate limiting (stricter in production, relaxed in development)
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: process.env.NODE_ENV === 'production' ? 5 : 50 // relaxed for development
+  max: process.env.NODE_ENV === 'production' ? 5 : 100, // relaxed for development
+  message: { success: false, message: 'Too many authentication attempts, please try again later.' }
 });
 
 // CORS
