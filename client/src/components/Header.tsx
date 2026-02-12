@@ -17,13 +17,13 @@ const navItems = [
 const Header = ({ activeSection, onNavigate }: HeaderProps) => {
   return (
     <header className="fixed top-0 left-0 right-0 z-50 glass-card border-b border-border/30">
-      <div className="container mx-auto px-4 h-16 flex items-center justify-between">
+      <div className="container mx-auto px-4 h-20 flex items-center justify-between">
         <button onClick={() => onNavigate("home")} className="flex items-center gap-3 group">
-          <div className="w-12 h-12 rounded-lg overflow-hidden border-2 border-red-200 bg-white flex items-center justify-center flex-shrink-0 shadow-sm">
+          <div className="w-16 h-16 rounded-lg overflow-hidden border-2 border-red-200 bg-white flex items-center justify-center flex-shrink-0 shadow-sm">
             <img 
               src="/NCC_logo_full_HD-removebg-preview.png" 
               alt="NCC Logo" 
-              className="w-full h-full object-cover"
+              className="w-full h-full object-cover m-1"
               onError={(e) => {
                 // Fallback if image not found
                 const target = e.target as HTMLImageElement;
