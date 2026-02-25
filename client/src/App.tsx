@@ -8,6 +8,10 @@ import Index from "./pages/Index";
 import Profile from "./pages/Profile";
 import Settings from "./pages/Settings";
 import NotFound from "./pages/NotFound";
+import { ResetPassword } from "./pages/ResetPassword";
+import { OnboardingWizard } from "./components/OnboardingWizard";
+import Admin from "./pages/Admin";
+import Academics from "./pages/Academics";
 import { useEffect } from "react";
 
 const queryClient = new QueryClient();
@@ -29,6 +33,10 @@ const App = () => {
               <Route path="/" element={<Index />} />
               <Route path="/profile" element={<Profile />} />
               <Route path="/settings" element={<Settings />} />
+              <Route path="/reset-password/:token" element={<ResetPassword />} />
+              <Route path="/onboarding" element={<OnboardingWizard />} />
+              <Route path="/admin" element={<Admin />} />
+              <Route path="/academics" element={<Academics />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
             </Routes>

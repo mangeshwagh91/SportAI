@@ -6,6 +6,7 @@ interface User {
   name: string;
   email: string;
   role: string;
+  onboardingComplete?: boolean;
   age?: number;
   height?: number;
   weight?: number;
@@ -13,6 +14,9 @@ interface User {
   goals?: string[];
   bio?: string;
   createdAt?: string;
+  stressLevel?: number;
+  workLifeBalance?: string;
+  sleepQuality?: string;
   profile?: {
     age?: number;
     weight?: number;
@@ -31,7 +35,7 @@ interface AuthContextType {
   token: string | null;
   isLoading: boolean;
   login: (email: string, password: string) => Promise<void>;
-  register: (name: string, email: string, password: string) => Promise<void>;
+  register: (name: string, email: string, password: string, chNo?: string) => Promise<void>;
   logout: () => void;
   updateProfile: (profileData: Partial<User>) => Promise<void>;
   updateUser: (userData: Partial<User>) => void;
@@ -77,23 +81,33 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     initAuth();
   }, [token]);
 
+  const register = async (name: string, email: string, password: string, chNo?: string) => {
+    try {
+      const response = await authService.register(name, email, password, chNo);
+      setToken(response.token);
+      setUser(response.user);
+      localStorage.setItem('token', response.token);
+      
+      // Redirect to onboarding if not complete
+      if (response.user && !response.user.onboardingComplete) {
+        window.location.href = '/onboarding';
+      }
+    } catch (error) {
+      throw error;
+    }
+  };
+
   const login = async (email: string, password: string) => {
     try {
       const response = await authService.login(email, password);
       setToken(response.token);
       setUser(response.user);
       localStorage.setItem('token', response.token);
-    } catch (error) {
-      throw error;
-    }
-  };
-
-  const register = async (name: string, email: string, password: string) => {
-    try {
-      const response = await authService.register(name, email, password);
-      setToken(response.token);
-      setUser(response.user);
-      localStorage.setItem('token', response.token);
+      
+      // Redirect to onboarding if not complete
+      if (response.user && !response.user.onboardingComplete) {
+        window.location.href = '/onboarding';
+      }
     } catch (error) {
       throw error;
     }

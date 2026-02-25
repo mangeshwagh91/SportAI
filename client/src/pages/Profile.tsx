@@ -8,10 +8,11 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { Separator } from '@/components/ui/separator';
-import { User, Mail, Calendar, Ruler, Weight, Target, Save, ArrowLeft, Activity } from 'lucide-react';
+import { User, Mail, Calendar, Ruler, Weight, Target, Save, ArrowLeft, Activity, BookOpen, TrendingUp } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { API_URL } from '../config/api';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 
 interface UserProfile {
   name: string;
@@ -25,8 +26,31 @@ interface UserProfile {
   joinedAt: string;
 }
 
+interface Exam {
+  _id: string;
+  examName: string;
+  grade: string;
+  marks?: number;
+  percentage?: number;
+  result?: string;
+  date: string;
+}
+
+interface Subject {
+  _id: string;
+  subjectName: string;
+  subjectCode: string;
+  exams: Exam[];
+}
+
+interface AcademicData {
+  _id: string;
+  subjects: Subject[];
+}
+
 const Profile = () => {
   const [profile, setProfile] = useState<UserProfile | null>(null);
+  const [academicData, setAcademicData] = useState<AcademicData | null>(null);
   const [isEditing, setIsEditing] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -66,8 +90,31 @@ const Profile = () => {
         bio: user.bio || '',
         fitnessLevel: user.fitnessLevel || 'beginner'
       });
+
+      // Fetch academic data
+      fetchAcademicData();
     }
   }, [user]);
+
+  const fetchAcademicData = async () => {
+    if (!token) return;
+
+    try {
+      const response = await fetch(`${API_URL}/academics`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setAcademicData(data.data);
+      }
+    } catch (error) {
+      console.error('Failed to fetch academic data:', error);
+    }
+  };
 
   const handleSave = async () => {
     if (!token || !user) return;
@@ -419,6 +466,207 @@ const Profile = () => {
             </Card>
           </div>
         </div>
+
+        {/* Academic Performance Section */}
+        {academicData && academicData.subjects.some(s => s.exams.length > 0) && (
+          <div className="mt-8">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <BookOpen className="w-5 h-5" />
+                  Academic Performance
+                </CardTitle>
+                <CardDescription>
+                  Overview of your test performance and progress
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                {/* Overall Stats */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="bg-blue-50 p-4 rounded-lg">
+                    <div className="flex items-center gap-2 text-blue-700 mb-1">
+                      <BookOpen className="w-4 h-4" />
+                      <span className="text-sm font-medium">Total Tests</span>
+                    </div>
+                    <p className="text-2xl font-bold text-blue-900">
+                      {academicData.subjects.reduce((sum, s) => sum + s.exams.length, 0)}
+                    </p>
+                  </div>
+                  <div className="bg-green-50 p-4 rounded-lg">
+                    <div className="flex items-center gap-2 text-green-700 mb-1">
+                      <TrendingUp className="w-4 h-4" />
+                      <span className="text-sm font-medium">Excellent Grades</span>
+                    </div>
+                    <p className="text-2xl font-bold text-green-900">
+                      {academicData.subjects.reduce((sum, s) => 
+                        sum + s.exams.filter(e => e.grade === 'EX').length, 0
+                      )}
+                    </p>
+                  </div>
+                  <div className="bg-purple-50 p-4 rounded-lg">
+                    <div className="flex items-center gap-2 text-purple-700 mb-1">
+                      <Activity className="w-4 h-4" />
+                      <span className="text-sm font-medium">Active Subjects</span>
+                    </div>
+                    <p className="text-2xl font-bold text-purple-900">
+                      {academicData.subjects.filter(s => s.exams.length > 0).length}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Performance Over Time Graph */}
+                {academicData.subjects.some(s => s.exams.length > 0) && (
+                  <div>
+                    <h4 className="text-sm font-medium mb-4">Performance Over Time</h4>
+                    <div className="h-[300px]">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <LineChart
+                          data={(() => {
+                            // Map grades to numeric values for chart positioning (internal use only)
+                            const gradeToPosition = (grade: string) => {
+                              switch (grade) {
+                                case 'EX': return 3;
+                                case 'G': return 2;
+                                case 'S': return 1;
+                                default: return 0;
+                              }
+                            };
+
+                            return academicData.subjects
+                              .flatMap(subject => 
+                                subject.exams
+                                  .filter(exam => exam.grade) // Only include exams with grades
+                                  .map(exam => ({
+                                    date: new Date(exam.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+                                    fullDate: new Date(exam.date).toLocaleDateString(),
+                                    timestamp: new Date(exam.date).getTime(),
+                                    gradePosition: gradeToPosition(exam.grade || ''),
+                                    subject: subject.subjectName,
+                                    examName: exam.examName,
+                                    grade: exam.grade,
+                                  }))
+                              )
+                              .sort((a, b) => a.timestamp - b.timestamp)
+                              .slice(-10); // Last 10 tests
+                          })()}
+                        >
+                          <CartesianGrid strokeDasharray="3 3" />
+                          <XAxis 
+                            dataKey="date" 
+                            label={{ value: 'Time', position: 'insideBottom', offset: -5 }}
+                          />
+                          <YAxis 
+                            domain={[0, 4]} 
+                            label={{ value: 'Grade', angle: -90, position: 'insideLeft' }}
+                            ticks={[1, 2, 3]}
+                            tickFormatter={(value) => {
+                              switch(value) {
+                                case 3: return 'EX';
+                                case 2: return 'G';
+                                case 1: return 'S';
+                                default: return '';
+                              }
+                            }}
+                          />
+                          <Tooltip 
+                            content={({ active, payload }) => {
+                              if (active && payload && payload.length) {
+                                const data = payload[0].payload;
+                                return (
+                                  <div className="bg-white p-3 border rounded-lg shadow-lg">
+                                    <p className="font-medium">{data.subject}</p>
+                                    <p className="text-sm">{data.examName}</p>
+                                    <p className="text-sm">Date: {data.fullDate}</p>
+                                    <p className="text-sm font-semibold">Grade: {data.grade}</p>
+                                  </div>
+                                );
+                              }
+                              return null;
+                            }}
+                          />
+                          <Legend />
+                          <Line 
+                            type="monotone" 
+                            dataKey="gradePosition" 
+                            stroke="#3b82f6" 
+                            strokeWidth={2}
+                            dot={{ fill: '#3b82f6', r: 5 }}
+                            name="Grade"
+                          />
+                        </LineChart>
+                      </ResponsiveContainer>
+                    </div>
+                    <p className="text-xs text-muted-foreground mt-2 text-center">
+                      Showing last 10 tests across all subjects
+                    </p>
+                  </div>
+                )}
+
+                {/* Subject-wise summary */}
+                <div>
+                  <h4 className="text-sm font-medium mb-4">Subject Performance</h4>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {academicData.subjects.filter(s => s.exams.length > 0).map((subject) => {
+                      const isFiringTest = subject.subjectName === 'Firing Test 5 bullets';
+                      const exCount = subject.exams.filter(e => e.grade === 'EX').length;
+                      const gCount = subject.exams.filter(e => e.grade === 'G').length;
+                      const sCount = subject.exams.filter(e => e.grade === 'S').length;
+                      const avgMarks = isFiringTest 
+                        ? subject.exams.filter(e => e.marks).reduce((sum, e) => sum + (e.marks || 0), 0) / subject.exams.filter(e => e.marks).length
+                        : 0;
+                      
+                      return (
+                        <div key={subject._id} className="border rounded-lg p-4">
+                          <h5 className="font-medium mb-2">{subject.subjectName}</h5>
+                          <p className="text-xs text-muted-foreground mb-3">
+                            {subject.exams.length} test{subject.exams.length !== 1 ? 's' : ''}
+                          </p>
+                          {isFiringTest ? (
+                            <div className="flex gap-2">
+                              <Badge variant="outline">
+                                Avg: {avgMarks.toFixed(1)}/50
+                              </Badge>
+                            </div>
+                          ) : (
+                            <div className="flex gap-2">
+                              {exCount > 0 && (
+                                <Badge variant="default" className="bg-green-600">
+                                  {exCount} EX
+                                </Badge>
+                              )}
+                              {gCount > 0 && (
+                                <Badge variant="secondary">
+                                  {gCount} G
+                                </Badge>
+                              )}
+                              {sCount > 0 && (
+                                <Badge variant="outline">
+                                  {sCount} S
+                                </Badge>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* Link to full academics page */}
+                <div className="pt-4 border-t">
+                  <Button 
+                    variant="outline" 
+                    className="w-full"
+                    onClick={() => navigate('/academics')}
+                  >
+                    <BookOpen className="w-4 h-4 mr-2" />
+                    View Full Academic Records
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        )}
       </div>
     </div>
   );

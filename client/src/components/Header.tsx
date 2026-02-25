@@ -1,5 +1,8 @@
-import { Activity, Dumbbell, MessageCircle, TrendingUp, Target } from "lucide-react";
+import { Activity, Dumbbell, MessageCircle, TrendingUp, Target, Shield, BookOpen } from "lucide-react";
 import { AuthButtons } from "./AuthButtons";
+import { useAuth } from "../context/AuthContext";
+import { Button } from "./ui/button";
+import { useNavigate } from "react-router-dom";
 
 interface HeaderProps {
   activeSection: string;
@@ -10,11 +13,23 @@ const navItems = [
   { id: "home", label: "Home", icon: Activity },
   { id: "bmi", label: "BMI Calculator", icon: TrendingUp },
   { id: "goals", label: "Fitness Goals", icon: Target },
+  { id: "academics", label: "Academics", icon: BookOpen },
   { id: "recommendations", label: "AI Coach", icon: Dumbbell },
   { id: "chat", label: "Chat", icon: MessageCircle },
 ];
 
 const Header = ({ activeSection, onNavigate }: HeaderProps) => {
+  const { user } = useAuth();
+  const navigate = useNavigate();
+  
+  // Filter nav items based on user authentication
+  const visibleNavItems = navItems.filter(item => {
+    if (item.id === 'academics') {
+      return user && user.onboardingComplete;
+    }
+    return true;
+  });
+  
   return (
     <header className="fixed top-0 left-0 right-0 z-50 glass-card border-b border-border/30">
       <div className="container mx-auto px-4 h-20 flex items-center justify-between">
@@ -42,10 +57,16 @@ const Header = ({ activeSection, onNavigate }: HeaderProps) => {
 
         <div className="flex items-center gap-6">
           <nav className="hidden md:flex items-center gap-1">
-            {navItems.map((item) => (
+            {visibleNavItems.map((item) => (
               <button
                 key={item.id}
-                onClick={() => onNavigate(item.id)}
+                onClick={() => {
+                  if (item.id === 'academics') {
+                    navigate('/academics');
+                  } else {
+                    onNavigate(item.id);
+                  }
+                }}
                 className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
                   activeSection === item.id
                     ? "bg-primary/10 text-primary"
@@ -58,15 +79,33 @@ const Header = ({ activeSection, onNavigate }: HeaderProps) => {
             ))}
           </nav>
 
+          {user?.role === 'admin' && (
+            <Button
+              onClick={() => navigate('/admin')}
+              variant="outline"
+              size="sm"
+              className="hidden md:flex items-center gap-2"
+            >
+              <Shield className="w-4 h-4" />
+              Admin
+            </Button>
+          )}
+
           <AuthButtons />
         </div>
 
         <div className="md:hidden flex items-center gap-2">
           <div className="flex items-center gap-1">
-            {navItems.map((item) => (
+            {visibleNavItems.map((item) => (
               <button
                 key={item.id}
-                onClick={() => onNavigate(item.id)}
+                onClick={() => {
+                  if (item.id === 'academics') {
+                    navigate('/academics');
+                  } else {
+                    onNavigate(item.id);
+                  }
+                }}
                 className={`p-2 rounded-lg transition-all ${
                   activeSection === item.id
                     ? "bg-primary/10 text-primary"

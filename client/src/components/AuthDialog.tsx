@@ -6,19 +6,22 @@ import { Label } from './ui/label';
 import { Alert, AlertDescription } from './ui/alert';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
 import { useAuth } from '../context/AuthContext';
+import { authService } from '../services/authService';
 
 interface AuthDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  defaultTab?: 'login' | 'register';
+  defaultTab?: 'login' | 'register' | 'forgot-password';
 }
 
 export const AuthDialog = ({ open, onOpenChange, defaultTab = 'login' }: AuthDialogProps) => {
   const [activeTab, setActiveTab] = useState(defaultTab);
   const [loginData, setLoginData] = useState({ email: '', password: '' });
-  const [registerData, setRegisterData] = useState({ name: '', email: '', password: '', confirmPassword: '' });
+  const [registerData, setRegisterData] = useState({ name: '', email: '', password: '', confirmPassword: '', chNo: '' });
+  const [forgotPasswordEmail, setForgotPasswordEmail] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
   const { login, register } = useAuth();
 
@@ -55,9 +58,26 @@ export const AuthDialog = ({ open, onOpenChange, defaultTab = 'login' }: AuthDia
     setIsLoading(true);
 
     try {
-      await register(registerData.name, registerData.email, registerData.password);
+      await register(registerData.name, registerData.email, registerData.password, registerData.chNo);
       onOpenChange(false);
-      setRegisterData({ name: '', email: '', password: '', confirmPassword: '' });
+      setRegisterData({ name: '', email: '', password: '', confirmPassword: '', chNo: '' });
+    } catch (error: any) {
+      setError(error.message);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleForgotPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError(null);
+    setSuccessMessage(null);
+    setIsLoading(true);
+
+    try {
+      await authService.forgotPassword(forgotPasswordEmail);
+      setSuccessMessage('Password reset link has been sent to your email');
+      setForgotPasswordEmail('');
     } catch (error: any) {
       setError(error.message);
     } finally {
@@ -72,15 +92,22 @@ export const AuthDialog = ({ open, onOpenChange, defaultTab = 'login' }: AuthDia
           <DialogTitle>Welcome to SportAI</DialogTitle>
         </DialogHeader>
         
-        <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as 'login' | 'register')}>
-          <TabsList className="grid w-full grid-cols-2">
+        <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as 'login' | 'register' | 'forgot-password')}>
+          <TabsList className="grid w-full grid-cols-3">
             <TabsTrigger value="login">Login</TabsTrigger>
             <TabsTrigger value="register">Sign Up</TabsTrigger>
+            <TabsTrigger value="forgot-password" className="text-xs">Forgot?</TabsTrigger>
           </TabsList>
           
           {error && (
             <Alert variant="destructive">
               <AlertDescription>{error}</AlertDescription>
+            </Alert>
+          )}
+          
+          {successMessage && (
+            <Alert className="border-green-500 text-green-700">
+              <AlertDescription>{successMessage}</AlertDescription>
             </Alert>
           )}
 
@@ -111,6 +138,43 @@ export const AuthDialog = ({ open, onOpenChange, defaultTab = 'login' }: AuthDia
               <Button type="submit" className="w-full" disabled={isLoading}>
                 {isLoading ? 'Signing in...' : 'Sign In'}
               </Button>
+              <div className="text-center mt-2">
+                <button
+                  type="button"
+                  onClick={() => setActiveTab('forgot-password')}
+                  className="text-sm text-primary hover:underline"
+                >
+                  Forgot password?
+                </button>
+              </div>
+            </form>
+          </TabsContent>
+
+          <TabsContent value="forgot-password" className="space-y-4">
+            <form onSubmit={handleForgotPassword} className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="forgot-email">Email</Label>
+                <Input
+                  id="forgot-email"
+                  type="email"
+                  placeholder="Enter your email"
+                  value={forgotPasswordEmail}
+                  onChange={(e) => setForgotPasswordEmail(e.target.value)}
+                  required
+                />
+              </div>
+              <Button type="submit" className="w-full" disabled={isLoading}>
+                {isLoading ? 'Sending...' : 'Send Reset Link'}
+              </Button>
+              <div className="text-center mt-2">
+                <button
+                  type="button"
+                  onClick={() => setActiveTab('login')}
+                  className="text-sm text-muted-foreground hover:text-foreground"
+                >
+                  Back to login
+                </button>
+              </div>
             </form>
           </TabsContent>
 
@@ -136,6 +200,16 @@ export const AuthDialog = ({ open, onOpenChange, defaultTab = 'login' }: AuthDia
                   value={registerData.email}
                   onChange={(e) => setRegisterData({ ...registerData, email: e.target.value })}
                   required
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="register-chno">Chest Number (Optional)</Label>
+                <Input
+                  id="register-chno"
+                  type="text"
+                  placeholder="Enter your Chest Number if you have one"
+                  value={registerData.chNo}
+                  onChange={(e) => setRegisterData({ ...registerData, chNo: e.target.value })}
                 />
               </div>
               <div className="space-y-2">

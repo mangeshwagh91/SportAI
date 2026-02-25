@@ -2,6 +2,8 @@ const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
+const path = require('path');
+const fs = require('fs');
 require('dotenv').config();
 
 const connectDB = require('./config/database');
@@ -10,11 +12,21 @@ const bmiRoutes = require('./routes/bmi');
 const aiRoutes = require('./routes/ai');
 const chatRoutes = require('./routes/chat');
 const goalsRoutes = require('./routes/goals');
+const adminRoutes = require('./routes/admin');
+const academicsRoutes = require('./routes/academics');
+const ptTestRoutes = require('./routes/ptTest');
 
 const app = express();
 
 // Connect to database
 connectDB();
+
+// Create uploads directory if it doesn't exist
+const uploadsDir = path.join(__dirname, '../uploads/profiles');
+if (!fs.existsSync(uploadsDir)) {
+  fs.mkdirSync(uploadsDir, { recursive: true });
+  console.log('Created uploads directory');
+}
 
 // Security middleware
 app.use(helmet());
@@ -46,13 +58,33 @@ const allowedOrigins = [
 ].filter(Boolean);
 
 app.use(cors({
-  origin: allowedOrigins,
-  credentials: true
+  origin: function (origin, callback) {
+    // Allow requests with no origin (like mobile apps or curl requests)
+    if (!origin) return callback(null, true);
+    
+    if (allowedOrigins.indexOf(origin) !== -1) {
+      callback(null, true);
+    } else {
+      console.log('Origin not allowed by CORS:', origin);
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
+  exposedHeaders: ['Content-Range', 'X-Content-Range'],
+  maxAge: 86400 // 24 hours
 }));
+
+// Handle preflight requests
+app.options('*', cors());
 
 // Body parser middleware
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
+
+// Serve static files from uploads directory
+app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 
 // Routes
 app.use('/api/auth', authLimiter, authRoutes);
@@ -60,6 +92,9 @@ app.use('/api/bmi', bmiRoutes);
 app.use('/api/ai', aiRoutes);
 app.use('/api/chat', chatRoutes);
 app.use('/api/goals', goalsRoutes);
+app.use('/api/admin', adminRoutes);
+app.use('/api/academics', academicsRoutes);
+app.use('/api/pt-test', ptTestRoutes);
 
 // Health check route
 app.get('/api/health', (req, res) => {

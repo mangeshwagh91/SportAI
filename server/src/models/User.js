@@ -22,6 +22,13 @@ const UserSchema = new mongoose.Schema({
     required: [true, 'Please provide a password'],
     minLength: [6, 'Password must be at least 6 characters']
   },
+  chNo: {
+    type: String,
+    trim: true,
+    sparse: true,
+    index: true,
+    alias: 'chestNumber'
+  },
   role: {
     type: String,
     enum: ['user', 'admin'],
@@ -29,8 +36,19 @@ const UserSchema = new mongoose.Schema({
   },
   // Direct profile fields
   age: Number,
+  gender: {
+    type: String,
+    enum: ['male', 'female', 'other']
+  },
+  profilePhoto: String,
   height: Number,
   weight: Number,
+  bmi: Number,
+  favouriteSport: String,
+  playingSport: {
+    type: Boolean,
+    default: false
+  },
   bio: {
     type: String,
     maxLength: [500, 'Bio cannot be more than 500 characters']
@@ -41,6 +59,47 @@ const UserSchema = new mongoose.Schema({
     default: 'beginner'
   },
   goals: [String],
+  
+  // Onboarding completion flags
+  onboardingComplete: {
+    type: Boolean,
+    default: false
+  },
+  onboardingStep: {
+    type: Number,
+    default: 1
+  },
+  
+  // Stress Assessment Data
+  stressAssessment: {
+    responses: [{
+      question: String,
+      score: {
+        type: Number,
+        min: 0,
+        max: 4
+      },
+      category: {
+        type: String,
+        enum: ['emotional', 'physical', 'social', 'lifestyle', 'financial']
+      }
+    }],
+    totalScore: {
+      type: Number,
+      default: 0
+    },
+    stressLevel: {
+      type: String,
+      enum: ['low', 'mild', 'moderate', 'high'],
+      default: 'low'
+    },
+    primaryStressSource: {
+      type: String,
+      enum: ['emotional', 'physical', 'social', 'lifestyle', 'financial']
+    },
+    completedAt: Date
+  },
+  
   // Nested profile for additional preferences
   profile: {
     preferences: {
@@ -55,7 +114,9 @@ const UserSchema = new mongoose.Schema({
   lastLogin: {
     type: Date,
     default: Date.now
-  }
+  },
+  resetPasswordToken: String,
+  resetPasswordExpires: Date
 }, {
   timestamps: true
 });
