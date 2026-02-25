@@ -53,7 +53,9 @@ const allowedOrigins = [
   'http://localhost:8080',
   'http://localhost:8081',
   'http://localhost:4173',
-  // Add production URLs from CLIENT_URL environment variable
+  // Production URLs
+  'https://sport-ai-acpb.vercel.app',
+  // Add additional production URLs from CLIENT_URL environment variable
   ...(process.env.CLIENT_URL ? process.env.CLIENT_URL.split(',').map(url => url.trim()) : [])
 ].filter(Boolean);
 
@@ -66,7 +68,9 @@ app.use(cors({
       callback(null, true);
     } else {
       console.log('Origin not allowed by CORS:', origin);
-      callback(new Error('Not allowed by CORS'));
+      // Still allow the request but without CORS headers the browser will block it
+      // Don't throw an error as that causes a 500 without CORS headers
+      callback(null, false);
     }
   },
   credentials: true,
