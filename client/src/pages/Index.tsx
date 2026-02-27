@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import Header from "@/components/Header";
 import HeroSection from "@/components/HeroSection";
 import { EnhancedBMICalculator } from "@/components/EnhancedBMICalculator";
@@ -13,12 +14,33 @@ import {
 } from "@/components/PreviewComponents";
 import { AuthDialog } from "@/components/AuthDialog";
 import { useAuth } from "@/context/AuthContext";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { AlertCircle } from "lucide-react";
 
 const Index = () => {
   const [activeSection, setActiveSection] = useState("home");
   const [authDialogOpen, setAuthDialogOpen] = useState(false);
   const [authDialogTab, setAuthDialogTab] = useState<'login' | 'register'>('login');
+  const [onboardingAlertOpen, setOnboardingAlertOpen] = useState(false);
   const { user } = useAuth();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    // Check if user is logged in but hasn't completed onboarding
+    if (user && !user.onboardingComplete) {
+      setOnboardingAlertOpen(true);
+    } else {
+      setOnboardingAlertOpen(false);
+    }
+  }, [user]);
 
   const navigateTo = (section: string) => {
     setActiveSection(section);
@@ -91,6 +113,26 @@ const Index = () => {
         onOpenChange={setAuthDialogOpen}
         defaultTab={authDialogTab}
       />
+
+      {/* Onboarding Required Alert */}
+      <AlertDialog open={onboardingAlertOpen} onOpenChange={setOnboardingAlertOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2">
+              <AlertCircle className="w-5 h-5 text-yellow-500" />
+              Complete Your Onboarding
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              To access all features and get personalized fitness recommendations, please complete your onboarding profile first.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogAction onClick={() => navigate('/onboarding')}>
+              Complete Onboarding
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };

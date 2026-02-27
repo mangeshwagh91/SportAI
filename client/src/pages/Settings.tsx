@@ -67,9 +67,18 @@ const Settings = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
+    // Check if user has completed onboarding
+    if (user && !user.onboardingComplete) {
+      navigate('/onboarding');
+      return;
+    }
+    if (!user) {
+      navigate('/');
+      return;
+    }
     // Load user settings from API or localStorage
     loadSettings();
-  }, []);
+  }, [user, navigate]);
 
   const loadSettings = async () => {
     // This would typically fetch from your API

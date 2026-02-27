@@ -70,6 +70,12 @@ const Profile = () => {
 
   useEffect(() => {
     if (user) {
+      // Check if user has completed onboarding
+      if (!user.onboardingComplete) {
+        navigate('/onboarding');
+        return;
+      }
+      
       setProfile({
         name: user.name,
         email: user.email,
@@ -94,7 +100,7 @@ const Profile = () => {
       // Fetch academic data
       fetchAcademicData();
     }
-  }, [user]);
+  }, [user, navigate]);
 
   const fetchAcademicData = async () => {
     if (!token) return;

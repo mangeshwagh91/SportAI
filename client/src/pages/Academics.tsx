@@ -65,7 +65,7 @@ interface AcademicData {
 }
 
 const Academics = () => {
-  const { token } = useAuth();
+  const { user, token } = useAuth();
   const navigate = useNavigate();
   const [academicData, setAcademicData] = useState<AcademicData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -85,8 +85,17 @@ const Academics = () => {
   const [examDate, setExamDate] = useState(new Date().toISOString().split('T')[0]);
 
   useEffect(() => {
+    // Check if user has completed onboarding
+    if (user && !user.onboardingComplete) {
+      navigate('/onboarding');
+      return;
+    }
+    if (!user) {
+      navigate('/');
+      return;
+    }
     fetchAcademicData();
-  }, []);
+  }, [user, navigate]);
 
   const fetchAcademicData = async () => {
     try {
