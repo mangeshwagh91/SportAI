@@ -39,13 +39,6 @@ const limiter = rateLimit({
 });
 app.use(limiter);
 
-// Auth rate limiting (stricter in production, relaxed in development)
-const authLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: process.env.NODE_ENV === 'production' ? 5 : 100, // relaxed for development
-  message: { success: false, message: 'Too many authentication attempts, please try again later.' }
-});
-
 // CORS
 const allowedOrigins = [
   'http://localhost:3000',
@@ -91,7 +84,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 
 // Routes
-app.use('/api/auth', authLimiter, authRoutes);
+app.use('/api/auth', authRoutes);
 app.use('/api/bmi', bmiRoutes);
 app.use('/api/ai', aiRoutes);
 app.use('/api/chat', chatRoutes);
